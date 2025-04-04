@@ -146,11 +146,11 @@ void exchange_nodes(std::shared_ptr<Node<T>> leftNode, std::shared_ptr<Node<T>> 
 template <typename T>
 void shift_up(std::shared_ptr<Node<T>> root, std::shared_ptr<Node<T>> node){
   std::shared_ptr<Node<T>> currNode = node;
-  while(currNode != root){
+  while(currNode != nullptr){
     if(currNode->leftChild != nullptr && currNode->rightChild != nullptr)
       currNode->weight = currNode->leftChild->weight + currNode->rightChild->weight;
     else
-      currNode->weight=currNode->occurrences*currNode->weight;
+      currNode->weight = currNode->occurrences*currNode->data.size();
     
     if(currNode->parent != nullptr && currNode->weight > get_sibling(currNode)->weight+1){
       if(currNode->parent->parent != nullptr && currNode->weight > get_sibling(currNode->parent)->weight){
@@ -180,10 +180,14 @@ void update_tree(std::shared_ptr<Node<T>>& root, std::shared_ptr<Node<T>>& dictN
     q->data.push_back(nextTerm);
     q->weight += q->occurrences;
 
-    if (p->data.empty() && p != dictNode)
-      remove_child_from_parent(p);
-    else if (auto sibling = get_sibling(p))
-      shift_up(root, sibling);
+    shift_up(root, q);
+
+    if(p!= dictNode){
+      if (p->data.empty() && p != dictNode)
+        remove_child_from_parent(p);
+      else if (auto sibling = get_sibling(p))
+        shift_up(root, sibling);
+    }
   } else {
     auto newNode = std::make_shared<Node<T>>();
     auto newClass = std::make_shared<Node<T>>();
@@ -196,8 +200,6 @@ void update_tree(std::shared_ptr<Node<T>>& root, std::shared_ptr<Node<T>>& dictN
     newClass->occurrences = p->occurrences + 1;
     newClass->weight = newClass->occurrences;
     newClass->data.push_back(nextTerm);
-
-    newNode->weight = newClass->weight + p->weight;
 
     if (p->parent) {
       if (p->parent->leftChild == p)
@@ -212,6 +214,8 @@ void update_tree(std::shared_ptr<Node<T>>& root, std::shared_ptr<Node<T>>& dictN
     if(p != dictNode)
       p->data.erase(std::remove(p->data.begin(), p->data.end(), nextTerm), p->data.end());
     p->weight -= p->occurrences;
+
+    newNode->weight = newClass->weight + p->weight;
 
     if (p->data.empty() && p != dictNode)
       remove_child_from_parent(p);
@@ -275,7 +279,8 @@ int main() {
   // 1, 2, 5 are 3 occurrences
   // 0, 3, 4 are 1 occurrence
   // everything else is 0
-  std::vector<int> data = {1,2,5,2,4,1,2,5,3,5,0,1};
+  //std::vector<int> data = {1,2,5,2,4,1,2,5,3,5,0,1};
+  std::vector<int> data = {7,7,7,7,7,7,7,7,7,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,3,3,3,3,3,3,3,3,3,3,3};
 
   // everything occurs once
   //std::vector<int> data = {0,1,2,3,4,5,6,7,8,9};
