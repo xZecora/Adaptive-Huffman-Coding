@@ -4,8 +4,7 @@
 #include <iostream>
 #include <memory> // Use smart pointers for better memory management
 //This is for the C++ image library im using
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "bitmap-cpp/bitmap.h"
 
 // Node structure for the tree
 template <typename T>
@@ -258,7 +257,7 @@ void printBT(const std::string& prefix, const std::shared_ptr<Node<T>> node, boo
         std::cout << (isLeft ? "├──" : "└──" );
 
         // print the value of the node
-        std::cout << node->occurrences << std::endl;
+        std::cout << node->weight << std::endl;
 
         // enter the next tree level - left and right branch
         printBT( prefix + (isLeft ? "│   " : "    "), node->leftChild, true);
@@ -272,7 +271,6 @@ void printBT(const std::shared_ptr<Node<T>> node)
     printBT("", node, false);    
 }
 
-// pass the root node of your binary tree
 int main() {
   // rewrote so dictionary is no longer neccessary
   //std::vector<int> dictionary = {1, 2, 3, 4, 5, 6, 7, 8, 9, 0};
@@ -280,27 +278,36 @@ int main() {
   // 0, 3, 4 are 1 occurrence
   // everything else is 0
   //std::vector<int> data = {1,2,5,2,4,1,2,5,3,5,0,1};
-  std::vector<int> data = {7,7,7,7,7,7,7,7,7,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,3,3,3,3,3,3,3,3,3,3,3};
+  //std::vector<int> data = {7,7,7,7,7,7,7,7,7,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,3,3,3,3,3,3,3,3,3,3,3};
 
   // everything occurs once
   //std::vector<int> data = {0,1,2,3,4,5,6,7,8,9};
   //std::vector<int> data = {1, 2, 5, 2};
 
   // this stuff is for the C++ image library im using
-  int width, height, bpp;
 
-  uint8_t* rgb_image = stbi_load("image.png", &width, &height, &bpp, 3);
+  //auto tree = initialize_tree(data[0]);
+  //auto dictNode = tree;
 
-  auto tree = initialize_tree(data[0]);
-  auto dictNode = tree;
-
+  /*
   for (auto value : data) {
     update_tree(tree, dictNode, value);
     print_tree(tree);
     std::cout << std::endl << std::flush;
   }
+  */
+  std::vector<std::vector<int>> data = bmp::readBitmap("lichtenstein.bmp");
+
+  auto tree = initialize_tree(data[0][0]);
+  auto dictNode = tree;
+
+  for(auto x : data)
+    for(auto y : x)
+    update_tree(tree, dictNode, y);
 
   printBT(tree);
 
-  stbi_image_free(rgb_image);
+  std::cout << "Image Size: " << data.size() << "x" << data[0].size() << std::endl << std::flush;
+
+  //stbi_image_free(rgb_image);
 }
