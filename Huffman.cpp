@@ -2,6 +2,8 @@
 #include <algorithm>
 #include <queue>
 #include <iostream>
+#include <string>
+#include <fstream>
 #include <memory> // Use smart pointers for better memory management
 //This is for the C++ image library im using
 #include "bitmap-cpp/bitmap.h"
@@ -11,6 +13,7 @@ template <typename T>
 struct Node {
   int occurrences = 0, weight = 0;
   std::shared_ptr<Node> leftChild = nullptr, rightChild = nullptr, parent = nullptr;
+  bool isLeft = false;
   std::vector<T> data;
 };
 
@@ -20,6 +23,7 @@ std::shared_ptr<Node<T>> initialize_tree(T type) {
   auto start = std::make_shared<Node<T>>();
   start->data = {};
   start->weight = 100000000;
+  start->isLeft = false;
   return start;
 }
 
@@ -165,11 +169,51 @@ void shift_up(std::shared_ptr<Node<T>> root, std::shared_ptr<Node<T>> node){
   }
 }
 
+template <typename T>
+std::vector<bool> toBinary(T n)
+{
+    std::vector<bool> r;
+    while(n!=0) {
+      r.insert(r.begin(), n%2==0 ?0:1);
+      n/=2;
+    };
+    return r;
+}
+
+template <typename T>
+std::vector<bool> nodePrefix(std::shared_ptr<Node<T>> node, std::shared_ptr<Node<T>> root){
+  std::shared_ptr<Node<T>> currNode = node;
+  std::vector<bool> prefix = {};
+  while(currNode != root){
+    if(currNode->isLeft)
+      prefix.insert(prefix.begin(), 0);
+    else
+      prefix.insert(prefix.begin(), 1);
+    currNode = currNode->parent;
+  }
+  return prefix;
+}
+
 // Function to update the tree
 template <typename T>
-void update_tree(std::shared_ptr<Node<T>>& root, std::shared_ptr<Node<T>>& dictNode, T nextTerm) {
+std::vector<bool> update_tree(std::shared_ptr<Node<T>>& root, std::shared_ptr<Node<T>>& dictNode, T nextTerm) {
+  std::vector<bool> resultCode;
   std::shared_ptr<Node<T>> p = find_leaf_by_term(root, dictNode, nextTerm);
-  auto q = find_leaf_by_occurrences(root, p->occurrences + 1);
+  std::shared_ptr<Node<T>> q = find_leaf_by_occurrences(root, p->occurrences + 1);
+
+  if(p != dictNode){
+    std::vector<bool> prefix = nodePrefix(p, root);
+    std::vector<bool> dataBin = {};
+    if(p->data.size() != 1)
+      std::vector<bool> dataBin = toBinary(p->data.size() - 1);
+    resultCode.insert(resultCode.end(), prefix.begin(), prefix.end());
+    resultCode.insert(resultCode.end(), dataBin.begin(), dataBin.end());
+  } else {
+    std::vector<bool> prefix = nodePrefix(p, root);
+    std::vector<bool> dataBin = toBinary(nextTerm);
+    resultCode.insert(resultCode.end(), prefix.begin(), prefix.end());
+    resultCode.insert(resultCode.end(), dataBin.begin(), dataBin.end());
+  }
 
   if (q) {
     if(p != dictNode){
@@ -223,6 +267,8 @@ void update_tree(std::shared_ptr<Node<T>>& root, std::shared_ptr<Node<T>>& dictN
 
     shift_up(root, newNode);
   }
+  return resultCode;
+
 }
 
 // Function to print the tree
@@ -298,16 +344,37 @@ int main() {
   */
   std::vector<std::vector<int>> data = bmp::readBitmap("lichtenstein.bmp");
 
+  //std::vector<int> data = {1,2,4,5,9,1,2,5,6,7,5,2,8,0};
+
   auto tree = initialize_tree(data[0][0]);
   auto dictNode = tree;
 
-  for(auto x : data)
-    for(auto y : x)
-    update_tree(tree, dictNode, y);
+  //std::string code = "";
+  std::vector<bool> code = {};
+
+  for(auto x : data){
+    for(auto y : x){
+      std::vector<bool> temp = update_tree(tree, dictNode, y);
+      code.insert(code.end(), temp.begin(), temp.end());
+    }
+  }
 
   printBT(tree);
 
-  std::cout << "Image Size: " << data.size() << "x" << data[0].size() << std::endl << std::flush;
+  //std::cout << "Image Size: " << data.size() << "x" << data[0].size() << std::endl << std::flush;
+  //
+  std::ofstream out("out.txt");
+  std::streambuf *coutbuf = std::cout.rdbuf();
+  std::cout.rdbuf(out.rdbuf());
+
+  for(auto i : code)
+    std::cout << i;
+
+  std::cout << std::endl << std::flush;
+
+
+  std::cout.rdbuf(coutbuf);
+  std::cout << code.size() << std::endl << std::flush;
 
   //stbi_image_free(rgb_image);
 }
