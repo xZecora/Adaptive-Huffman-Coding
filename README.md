@@ -37,6 +37,22 @@ adaptive-huffman-coding/
 ├── README.md            # 📘 Project overview and documentation
 └── LICENSE              # 📄 License file (ACM-compatible)
 
+### Python Version
+cd python
+pip install numpy pillow
+python Adaptive_Huffman.py --input input_image.png
+
+
+### C++ Version
+
+```bash
+cd cpp
+g++ -std=c++11 main.cpp -o huffman
+./huffman input_image.bmp
+
 
 
 See the paper 📄 [`A More Memory-Efficient Adaptive Huffman Coding`](https://github.com/xZecora/Adaptive-Huffman-Coding) for technical details and performance benchmarks.
+
+
+
